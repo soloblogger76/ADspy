@@ -18,6 +18,23 @@ const aiRoutes = require('./routes/ai');
 const app = express();
 const PORT = parseInt(process.env.PORT) || 3001;
 
+// Startup validation
+const requiredEnv = ['JWT_SECRET'];
+for (const key of requiredEnv) {
+  if (!process.env[key]) {
+    console.error(`[FATAL] Missing required environment variable: ${key}`);
+    console.error('Copy .env.example to .env and fill in the values.');
+    process.exit(1);
+  }
+}
+
+if (!process.env.FB_ACCESS_TOKEN) {
+  console.warn('[WARN] FB_ACCESS_TOKEN not set. Facebook API calls will fail.');
+}
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.warn('[WARN] ANTHROPIC_API_KEY not set. AI features will be unavailable.');
+}
+
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
@@ -49,5 +66,9 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`[Server] Running on port ${PORT}`);
-  initAlertEngine();
+  try {
+    initAlertEngine();
+  } catch (err) {
+    console.warn('[WARN] Alert engine failed to initialize:', err.message);
+  }
 });

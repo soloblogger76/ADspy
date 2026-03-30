@@ -205,11 +205,11 @@ async function fetchAds(params, teamId) {
 }
 
 async function refreshAds(teamId) {
-  db.prepare('DELETE FROM ads_cache WHERE team_id = ?').run(teamId);
-
   const lastQuery = db.prepare(
     'SELECT search_query FROM ads_cache WHERE team_id = ? ORDER BY cached_at DESC LIMIT 1'
   ).get(teamId);
+
+  db.prepare('DELETE FROM ads_cache WHERE team_id = ?').run(teamId);
 
   if (lastQuery) {
     const parts = lastQuery.search_query.split('|');

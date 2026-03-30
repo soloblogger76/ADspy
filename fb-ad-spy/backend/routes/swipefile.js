@@ -66,22 +66,7 @@ router.post('/', (req, res) => {
   }
 });
 
-router.delete('/:id', (req, res) => {
-  try {
-    const item = db.prepare(
-      'SELECT * FROM swipe_file WHERE id = ? AND team_id = ?'
-    ).get(req.params.id, req.user.team_id);
-
-    if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-
-    db.prepare('DELETE FROM swipe_file WHERE id = ?').run(item.id);
-    res.json({ message: 'Removed from swipe file' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// Fixed: All specific routes MUST come before /:id wildcard
 
 router.get('/collections', (req, res) => {
   try {
@@ -149,6 +134,7 @@ router.get('/export/csv', (req, res) => {
   }
 });
 
+// Wildcard /:id routes AFTER all specific routes
 router.patch('/:id/notes', (req, res) => {
   try {
     const { notes } = req.body;
@@ -164,6 +150,23 @@ router.patch('/:id/notes', (req, res) => {
 
     const updated = db.prepare('SELECT * FROM swipe_file WHERE id = ?').get(item.id);
     res.json({ ...updated, ad_data: JSON.parse(updated.ad_data_json) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/:id', (req, res) => {
+  try {
+    const item = db.prepare(
+      'SELECT * FROM swipe_file WHERE id = ? AND team_id = ?'
+    ).get(req.params.id, req.user.team_id);
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    db.prepare('DELETE FROM swipe_file WHERE id = ?').run(item.id);
+    res.json({ message: 'Removed from swipe file' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
